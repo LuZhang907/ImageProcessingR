@@ -61,5 +61,50 @@ lines(return, type='l', col=4)
 
 dev.off()
 
+##################################################################
+##################   Wavelet Transform     #######################
+
+#Discrete Wavelet transform
+
+# mother wavelet function db4 (Daubechies wavelet of order 4)=d4
+# decomposition level is 5
+# soft thresholding
+# threshold method: rigrsure->adpative
+
+#install.packages("wmtsa") 
+# new version have been archived
+
+#load old version
+#install.packages("remotes")
+library(remotes)
+#install_version("wmtsa", "2.0-3")
+library(wmtsa)
+DWTprice<-wavShrink(prices, wavelet="d4",
+          n.level=5,
+          shrink.fun="soft", thresh.fun="adaptive")
+
+# original signal v.s. denoised signal
+tsplot(prices, ylab="price", lwd=2, col=rgb(0.2,0.4,0.8))
+lines(DWTprice, lwd=2, col=rgb( 0.8,0.5,0.3) )
+legend('topright', col=c(rgb(0.2,0.4,0.8),  rgb( 0.8,0.5,0.3)), lwd=2, 
+       legend=c("orginal signal", "denoised signal"), bg='white') 
+
+# Continuous wavelet transform
+
+logReturn<-rep(0,length(DWTprice)-1)
+for (i in 1: (length(DWTprice)-1)){
+  logReturn[i]<-log(DWTprice[i+1])-log(DWTprice[i])
+}
+
+# original return v.s. denoised return
+tsplot(return, ylab="price", lwd=2, col=rgb(0.2,0.4,0.8))
+lines(logReturn, lwd=2, col=rgb( 0.8,0.5,0.3) )
+legend('topright', col=c(rgb(0.2,0.4,0.8),  rgb( 0.8,0.5,0.3)), lwd=2, 
+       legend=c("orginal return", "denoised return"), bg='white') 
+
+# mother wavelet function: Morlet wavelet
+#install.packages("Rwave")
+library(Rwave)
+cwtReturn<-cwt(prices, noctave=5) # not reasonable!
 
 
