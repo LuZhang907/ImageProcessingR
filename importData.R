@@ -103,8 +103,17 @@ legend('topright', col=c(rgb(0.2,0.4,0.8),  rgb( 0.8,0.5,0.3)), lwd=2,
        legend=c("orginal return", "denoised return"), bg='white') 
 
 # mother wavelet function: Morlet wavelet
-#install.packages("Rwave")
-library(Rwave)
-cwtReturn<-cwt(prices, noctave=5) # not reasonable!
+my.data<-data.frame(x=prices)
+my.w<-analyze.wavelet(my.data, "x",
+                      loess.span = 0,
+                      dt=1,dj=1/250,
+                      lowerPeriod = 2,
+                      upperPeriod = 256,
+                      make.pval = TRUE,n.sim = 10)
+
+#plot the wavelet power spectrum
+wt.image(my.w, color.key = "quantile",n.levels=250,
+         legend.params = list(lab="wavelet power levels",mar=4.7))
+
 
 
