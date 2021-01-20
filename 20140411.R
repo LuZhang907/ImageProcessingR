@@ -1,28 +1,4 @@
 ##################################################################
-##########    import financial data 2007-2020    #################
-
-#read multiple text file 
-
-#the path where text files are saved
-mypath="/Users/luzhang/Desktop/SPX"
-setwd(mypath)
-
-#Create list of text files
-SPX_ls=list.files(path=mypath, pattern = "*.txt")
-
-#Read the files in, comma is the separator
-SPX_df<-lapply(SPX_ls, function(x){read.table(file = x, 
-                                   col.names = c("DateTime","Open", "High","Low","Close"),sep = ",")})
-
-#Combine them
-SPX <- do.call("rbind", lapply(SPX_df, as.data.frame))
-#head(SPX)
-#length(SPX$DataTime)
-
-#DateTime: character->dateTime(double)
-SPX$DateTime<-as.POSIXct(SPX$DateTime,tz=Sys.timezone())
-
-##################################################################
 ##################       2014-04-11        #######################
 
 #Extract the data on 2014-04-11
@@ -80,8 +56,8 @@ library(remotes)
 #install_version("wmtsa", "2.0-3")
 library(wmtsa)
 DWTprice<-wavShrink(prices, wavelet="d4",
-          n.level=2, #level=5 is too smoothy
-          shrink.fun="soft", thresh.fun="adaptive")
+                    n.level=1, #level=5 is too smoothy #change n.levels will get huge difference on spectrum plot
+                    shrink.fun="soft", thresh.fun="adaptive")
 
 # original signal v.s. denoised signal
 tsplot(prices, ylab="price", lwd=2, col=rgb(0.2,0.4,0.8))
@@ -126,8 +102,20 @@ my.w<-analyze.wavelet(my.data, "x",
                       make.pval = FALSE,n.sim = 10)
 
 #plot the wavelet power spectrum
+wt.image(my.w, color.key = "interval",n.levels=250,
+         legend.params = list(lab="wavelet power levels",mar=4.7, label.digits=2)
+)
+
+# power spectrum-logReturn
+my.data<-data.frame(x=logReturn)
+my.w<-analyze.wavelet(my.data, "x",
+                      loess.span = 0,
+                      dt=1,dj=1/50,
+                      lowerPeriod = 2,
+                      upperPeriod = 256,
+                      make.pval = FALSE,n.sim = 10)
+
+#plot the wavelet power spectrum
 wt.image(my.w, color.key = "interval",n.levels=5,
          legend.params = list(lab="wavelet power levels",mar=4.7, label.digits=2)
-         )
-
-
+)
