@@ -20,7 +20,7 @@ SPX <- do.call("rbind", lapply(SPX_df, as.data.frame))
 #length(SPX$DataTime)
 
 #DateTime: character->dateTime(double)
-SPX$DateTime<-as.POSIXct(SPX$DateTime,tz=Sys.timezone())
+SPX$DateTime<-as.POSIXct(SPX$DateTime,taz="EST")
 
 ##################################################################
 ##################       2014-04-11        #######################
@@ -30,7 +30,6 @@ SPX140411 <- subset(SPX,DateTime >= "2014-04-11 09:30:00 " & DateTime <= "2014-0
 
 # calculate prices and returns
 
-# prices=avergae(O,H,L,C)
 prices<-SPX140411$Close
 
 # return=log(P_i)-log(P_i-1)
@@ -332,7 +331,7 @@ wt.image(my.w, color.key = "interval",n.levels=250,
 ##################################################################
 ##################       2019-04-10        #######################
 
-#Extract the data on 2017-04-12
+#Extract the data on 2019-04-10
 SPX190410 <- subset(SPX,DateTime >= "2019-04-10 09:30:00 " & DateTime <= "2019-04-10 16:00:00")
 
 # calculate prices and returns
@@ -369,5 +368,66 @@ wt.image(my.w, color.key = "interval",n.levels=250,
 ##################################################################
 ############# prediction target y label     #######################
 
-# from 2009-04-08 to 2019-04-10
+options(digits.secs=3)
+Sys.setenv(TZ='EST')
 
+# truncate data from 2009-01-01 to 2019-12-31, 9:30 AM to 16:00 PM
+
+SPX$DateTime<-as.POSIXct(SPX$DateTime,format="%H:%M:%OS", taz="EST")
+SPX<- subset(SPX, lubridate::hour(SPX$DateTime)*60
+              +lubridate::minute(SPX$DateTime) >= 9*60+30)
+SPX <- subset(SPX, lubridate::hour(SPX$DateTime)*60
+              +lubridate::minute(SPX$DateTime) <= 16*60)
+
+SPX <- subset(SPX,DateTime >= " 2009-01-01 " & DateTime <= "2019-12-31")
+
+
+#length(SPX$DateTime)
+#calculate the log return between the average price from 1 to 360 minutes in the window and the price at the last minute of the day
+
+# convert Posixct to xts format
+library(highfrequency)
+library(xts)
+spx_ts<-xts(SPX$Close,SPX$DateTime)
+names(spx_ts) <- "price"
+
+day_index<-endpoints(spx_ts, on = "days", k = 1)
+#head(day_index)
+#length(day_index)
+
+# last min prices for each trading day
+lmP<-spx_ts[day_index,]
+
+# average prices from 1 to 360 mins
+n<-length(day_index)-1
+avg_360<-rep(0,n)
+for (i in 1:n){
+  start<-day_index[i]+1
+  end<-day_index[i+1]-30
+  avg_360[i]<-mean(spx_ts[start:end])
+}
+
+#calculate the log returns
+logReturn<-log(avg_360)-log(lmP)
+#length(logRetrn)
+hist(logReturn)
+
+#figure 5
+hist(logReturn, 
+     main="Retrun freqeuncy distribution y_mean_390", 
+     xlab="Return", 
+     col="red",
+     xlim=c(-0.03,0.03),
+     las=1, 
+     breaks=200)
+
+#create y label
+n<-length(lmP)
+y_label<-rep(0,n)
+for (i in 1:n ){
+  if(avg_360[i]<lmP[i]){
+    y_label[i]=1
+  }else{
+    y_label[i]=0
+  }
+}
