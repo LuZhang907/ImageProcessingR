@@ -366,7 +366,7 @@ wt.image(my.w, color.key = "interval",n.levels=250,
 
 
 ##################################################################
-############# prediction target y label     #######################
+############# prediction target y label     ######################
 
 options(digits.secs=3)
 Sys.setenv(TZ='EST')
@@ -410,7 +410,6 @@ for (i in 1:n){
 #calculate the log returns
 logReturn<-log(avg_360)-log(lmP)
 #length(logRetrn)
-hist(logReturn)
 
 #figure 5
 hist(logReturn, 
@@ -431,3 +430,46 @@ for (i in 1:n ){
     y_label[i]=0
   }
 }
+
+##################################################################
+####### creating daily 2D spectrum from 2009-2019     ############
+
+mypath="//Users/luzhang/Desktop/spectrum"
+setwd(mypath)
+
+#Extract the data on 2009-01-02
+test<-spx_ts[1:day_index[2],]
+head(test)
+prices<-as.vector(test)
+
+DWTprice<-wavShrink(prices, wavelet="d4",
+                    n.level=1, #level=5 is too smoothy #change n.levels will get huge difference on spectrum plot
+                    shrink.fun="soft", thresh.fun="adaptive")
+
+#plot denoised power spectrum
+logReturn<-rep(0,length(DWTprice)-1)
+for (i in 1: (length(DWTprice)-1)){
+  logReturn[i]<-log(DWTprice[i+1])-log(DWTprice[i])
+}
+
+my.data<-data.frame(x=logReturn)
+my.w<-analyze.wavelet(my.data, "x",
+                      loess.span = 0,
+                      dt=1,dj=1/250,
+                      lowerPeriod = 2,
+                      upperPeriod = 256,
+                      make.pval = FALSE,n.sim = 10)
+
+#plot the wavelet power spectrum-prices
+
+png(file='spectrum.png',  width=600, height=320)
+image<-wt.image(my.w, color.key = "interval",n.levels=250,
+         legend.params = list(lab="wavelet power levels",mar=4.7))
+
+dev.off() 
+
+
+
+
+
+
