@@ -1,3 +1,4 @@
+
 ##################################################################
 ##########    import financial data 2007-2020    #################
 
@@ -12,7 +13,7 @@ SPX_ls=list.files(path=mypath, pattern = "*.txt")
 
 #Read the files in, comma is the separator
 SPX_df<-lapply(SPX_ls, function(x){read.table(file = x, 
-                                   col.names = c("DateTime","Open", "High","Low","Close"),sep = ",")})
+                                              col.names = c("DateTime","Open", "High","Low","Close"),sep = ",")})
 
 #Combine them
 SPX <- do.call("rbind", lapply(SPX_df, as.data.frame))
@@ -78,8 +79,8 @@ library(remotes)
 #install_version("wmtsa", "2.0-3")
 library(wmtsa)
 DWTprice<-wavShrink(prices, wavelet="d4",
-          n.level=1, #level=5 is too smoothy #change n.levels will get huge difference on spectrum plot
-          shrink.fun="soft", thresh.fun="adaptive")
+                    n.level=1, #level=5 is too smoothy #change n.levels will get huge difference on spectrum plot
+                    shrink.fun="soft", thresh.fun="adaptive")
 
 # original signal v.s. denoised signal
 tsplot(prices, ylab="price", lwd=2, col=rgb(0.2,0.4,0.8))
@@ -126,7 +127,7 @@ my.w<-analyze.wavelet(my.data, "x",
 #plot the wavelet power spectrum
 wt.image(my.w, color.key = "interval",n.levels=250,
          legend.params = list(lab="wavelet power levels",mar=4.7, label.digits=2)
-         )
+)
 
 # power spectrum-logReturn
 my.data<-data.frame(x=logReturn)
@@ -375,7 +376,7 @@ Sys.setenv(TZ='EST')
 
 SPX$DateTime<-as.POSIXct(SPX$DateTime,format="%H:%M:%OS", taz="EST")
 SPX<- subset(SPX, lubridate::hour(SPX$DateTime)*60
-              +lubridate::minute(SPX$DateTime) >= 9*60+30)
+             +lubridate::minute(SPX$DateTime) >= 9*60+30)
 SPX <- subset(SPX, lubridate::hour(SPX$DateTime)*60
               +lubridate::minute(SPX$DateTime) <= 16*60)
 head(SPX)
@@ -452,7 +453,8 @@ createNewFileName = function(path  = getwd(), pattern = "plot_of_something", ext
   return(paste0(pattern,max(as.numeric(existingNumbers))+1,extension))
 }
 
-#test, Extract the data on 2009-01-02
+#plot and save daily spectrum from 2009-01-02 to 2019-12-31
+# don't run
 library(WaveletComp)
 library(wmtsa)
 
@@ -486,8 +488,14 @@ for (i in 1:n){
   dev.off() 
 }
 
+# total will be 2766 figures
 
- 
+
+##################################################################
+################# extract top 5 indicators    ####################
+
+
+
 
 
 
