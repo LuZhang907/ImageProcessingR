@@ -285,7 +285,7 @@ my.w<-analyze.wavelet(my.data, "x",
                       dt=1,dj=1/250,
                       lowerPeriod = 2,
                       upperPeriod = 256,
-                      make.pval = FALSE,n.sim = 10)
+                      make.pval = TRUE,n.sim = 10)
 
 #plot the wavelet power spectrum-prices
 wt.image(my.w, color.key = "interval",n.levels=250,
@@ -367,7 +367,7 @@ wt.image(my.w, color.key = "interval",n.levels=250,
 
 
 ##################################################################
-############# prediction target y label     ######################
+##################       target y label     ######################
 
 options(digits.secs=3)
 Sys.setenv(TZ='EST')
@@ -380,7 +380,7 @@ SPX<- subset(SPX, lubridate::hour(SPX$DateTime)*60
 SPX <- subset(SPX, lubridate::hour(SPX$DateTime)*60
               +lubridate::minute(SPX$DateTime) <= 16*60)
 head(SPX)
-SPX <- subset(SPX,DateTime >= " 2009-01-01 09:30:00" & DateTime <= "2019-12-31 16:00:00")
+SPX <- subset(SPX,DateTime >= " 2009-01-01" & DateTime <= "2019-12-31")
 head(SPX)
 
 
@@ -494,10 +494,12 @@ for (i in 1:n){
 
 
 ##################################################################
-###################   top 5 indicators    ########################
+###################   MIC: top 5 indicators    ###################
  
-#calculate indicators-daily
+# indicators vs y label#
+# failed, mic value too small#
 
+#calculate indicators-daily
 # daily average prices 
 n<-length(day_index)-1
 avg_390<-rep(0,n)
@@ -508,8 +510,9 @@ for (i in 1:n){
 }
 
 daily_prices<-avg_390
-#index close based on daily closed prices
-index_close<-seq(1,n,1)
+
+# close price index, don't know how to calculate it
+
 
 # daily Exponential moving average(EMA)
 # In the TTR package, we can use EMA():
@@ -523,21 +526,21 @@ RSI<-RSI(daily_prices)
 # Moving average within period 60 minutes
 MA60<-SMA(daily_prices)
 
-# don't know how to calculate CORREL \0_0/
+#  CORREL =autocorrealtaion? NO, we need CORREL has the same length like other indicators
+#CORREL=acf(daily_prices, lag=3, plot=F)
 
 #transform the indicators in matrix form
 y_label<-as.matrix(y_label)
 
 #indicators
 inds<-cbind(
-  index_close,
+  #index_close,
   EMA,
   RSI,
   MA60,
   CMOclose=CMO(daily_prices),
   DPOclose=DPO(daily_prices),
   MACDClose=MACD(daily_prices)[,1],
-  ROCClose=ROC(daily_prices),
   momentum=momentum(daily_prices),
   runPerRankClose=runPercentRank(daily_prices),
   TDI=TDI(daily_prices)[,1],
@@ -545,21 +548,344 @@ inds<-cbind(
   VHF=VHF(daily_prices)           
 )
 
-#indicators
 inds<-as.matrix(inds)
 head(inds)
 
 #calculate MIC
 library(minerva)
+ROCClose=ROC(daily_prices)
 mics<-cstats(inds,y_label)
-#mics between indcators and y_lable are too small
 
-#log_return<-as.matrix(logReturn)
-#mics_log<-cstats(inds,log_return)
+#mics between indicators and y_label are too small, around 0.1
+
+# indicators based on minute close prices and prices change ratios (1 months data)
+library(minerva)
+library(TTR)
+start<-day_index[1]+1
+end<-day_index[30]
+spx_test<-SPX[start:end,]
+#head(spx_test)
+#tail(spx_test)
+prices<-spx_test$Close
+ROCClose=ROC(prices)#prices change ratio
+
+inds<-cbind(
+  #index_close,
+  EMA<-EMA(prices),
+  RSI<-RSI(prices),
+  MA60<-SMA(prices),
+  CMOclose=CMO(prices),
+  DPOclose=DPO(prices),
+  MACDClose=MACD(prices)[,1],
+  momentum=momentum(prices),
+  runPerRankClose=runPercentRank(prices),
+  TDI=TDI(prices)[,1],
+  TRIX=TRIX(prices)[,1],
+  VHF=VHF(prices)           
+)
+
+inds<-as.matrix(inds)
+ROCClose<-as.matrix(ROCClose)
+cstats(inds, ROCClose)
+
+# indicators based on minute close prices and denoised log return
+
+library(minerva)
+library(TTR)
+library(WaveletComp)
+library(wmtsa)
+start<-day_index[1]+1
+end<-day_index[30]
+spx_test<-SPX[start:end,]
+
+#head(spx_test)
+#tail(spx_test)
+prices<-spx_test$Close
+
+DWTprice<-wavShrink(prices, wavelet="d4",
+                    n.level=1, 
+                    shrink.fun="soft", thresh.fun="adaptive")
+logReturn<-rep(0,length(DWTprice))
+for (i in 1: (length(DWTprice))){
+  logReturn[i]<-log(DWTprice[i+1])-log(DWTprice[i])
+}
 
 
+inds<-cbind(
+  #index_close,
+  EMA<-EMA(prices),
+  RSI<-RSI(prices),
+  MA60<-SMA(prices),
+  CMOclose=CMO(prices),
+  DPOclose=DPO(prices),
+  MACDClose=MACD(prices)[,1],
+  momentum=momentum(prices),
+  runPerRankClose=runPercentRank(prices),
+  TDI=TDI(prices)[,1],
+  TRIX=TRIX(prices)[,1],
+  VHF=VHF(prices)           
+)
+
+inds<-as.matrix(inds)
+logReturn<-as.matrix(logReturn)
+cstats(inds, logReturn)
+
+# indicators based on denoised log return and prices change ratios
+
+library(minerva)
+library(TTR)
+library(WaveletComp)
+library(wmtsa)
+start<-day_index[1]+1
+end<-day_index[30]
+spx_test<-SPX[start:end,]
+
+prices<-spx_test$Close
+ROCClose=ROC(prices)
+
+DWTprice<-wavShrink(prices, wavelet="d4",
+                    n.level=1, 
+                    shrink.fun="soft", thresh.fun="adaptive")
+logReturn<-rep(0,length(DWTprice))
+for (i in 1: (length(DWTprice))){
+  logReturn[i]<-log(DWTprice[i+1])-log(DWTprice[i])
+}
+
+# produce non-leading NAS
+inds<-cbind(
+  #index_close,
+  EMA<-EMA(logReturn),
+  RSI<-RSI(logReturn),
+  MA60<-SMA(logReturn),
+  CMOclose=CMO(logReturn),
+  DPOclose=DPO(logReturn),
+  MACDClose=MACD(logReturn)[,1],
+  momentum=momentum(logReturn),
+  runPerRankClose=runPercentRank(logReturn),
+  TDI=TDI(logReturn)[,1],
+  TRIX=TRIX(logReturn)[,1],
+  VHF=VHF(logReturn)           
+)
+
+inds<-as.matrix(inds)
+ROCClose<-as.matrix(ROCClose)
+cstats(inds, ROCClose)
+
+# indicators based on daily average log return and y label
+n<-length(day_index)-1
+avg_log<-rep(0, n)
+for (i in 1:n){
+  start<-day_index[i]+1
+  end<-day_index[i+1]
+  temp<-spx_ts[start:end,]
+  prices<-as.vector(temp)
+  DWTprice<-wavShrink(prices, wavelet="d4",
+                      n.level=1, 
+                      shrink.fun="soft", thresh.fun="adaptive")
+  logReturn<-rep(0,length(DWTprice)-1)
+  for (j in 1: (length(DWTprice)-1)){
+    logReturn[j]<-log(DWTprice[j+1])-log(DWTprice[j])
+  }
+  avg_log[i]<-mean(logReturn)
+}
+#length(avg_log)
+#avg_log<-as.matrix(avg_log)
+#y_label<-as.matrix(y_label)
+#mic<-cstats(avg_log, y_label) #6.	daily average log return and y label
+
+#transform the indicators in matrix form
+y_label<-as.matrix(y_label)
+
+#indicators
+inds<-cbind(
+  #index_close,
+  EMA<-EMA(avg_log),
+  RSI<-RSI(avg_log),
+  MA60<-SMA(avg_log),
+  CMOclose=CMO(avg_log),
+  DPOclose=DPO(avg_log),
+  MACDClose=MACD(avg_log)[,1],
+  momentum=momentum(avg_log),
+  runPerRankClose=runPercentRank(avg_log),
+  TDI=TDI(avg_log)[,1],
+  TRIX=TRIX(avg_log)[,1],
+  VHF=VHF(avg_log)           
+)
 
 
+#calculate MIC
+library(minerva)
+inds<-as.matrix(inds)
+head(inds)
+mics<-cstats(inds,y_label)
+
+##################################################################
+############## indicators daily 2D spectrum    ###################
+
+# EMA
+mypath="//Users/luzhang/Desktop/EMAspectrum"
+setwd(mypath)
+
+#avoid overwriting what files already exist @RockScience
+createNewFileName = function(path  = getwd(), pattern = "plot_of_something", extension=".png") {
+  myExistingFiles = list.files(path = path, pattern = pattern)
+  print(myExistingFiles)
+  completePattern = paste0("^(",pattern,")([0-9]*)(",extension,")$")
+  existingNumbers  = gsub(pattern = completePattern, replacement = "\\2", x = myExistingFiles)
+  
+  if (identical(existingNumbers, character(0)))
+    existingNumbers = 0
+  
+  return(paste0(pattern,max(as.numeric(existingNumbers))+1,extension))
+}
+
+#plot and save daily spectrum from 2009-01-02 to 2019-12-31
+
+library(WaveletComp)
+library(wmtsa)
+library(TTR)
+
+n<-length(day_index)-1
+for (i in 1:n){
+  start<-day_index[i]+1
+  end<-day_index[i+1]
+  temp<-spx_ts[start:end,]
+  prices<-as.vector(temp)
+  DWTprice<-wavShrink(prices, wavelet="d4",
+                      n.level=1, 
+                      shrink.fun="soft", thresh.fun="adaptive")
+  logReturn<-rep(0,length(DWTprice)-1)
+  for (i in 1: (length(DWTprice)-1)){
+    logReturn[i]<-log(DWTprice[i+1])-log(DWTprice[i])
+  }
+  
+  EMA<-EMA(logReturn)
+  EMA<-EMA[!is.na(EMA)]
+  my.data<-data.frame(x=EMA)
+  my.w<-analyze.wavelet(my.data, "x",
+                        loess.span = 0,
+                        dt=1,dj=1/250,
+                        lowerPeriod = 2,
+                        upperPeriod = 256,
+                        make.pval = FALSE,n.sim = 10)
+  
+  #plot the wavelet power spectrum-prices
+  
+  png(filename = createNewFileName(pattern="sepctrum"))
+  wt.image(my.w, color.key = "interval",n.levels=250,
+           legend.params = list(lab="wavelet power levels",mar=4.7))
+  dev.off() 
+}
+
+# RSI
+mypath="//Users/luzhang/Desktop/RSIspectrum"
+setwd(mypath)
+
+#avoid overwriting what files already exist @RockScience
+createNewFileName = function(path  = getwd(), pattern = "plot_of_something", extension=".png") {
+  myExistingFiles = list.files(path = path, pattern = pattern)
+  print(myExistingFiles)
+  completePattern = paste0("^(",pattern,")([0-9]*)(",extension,")$")
+  existingNumbers  = gsub(pattern = completePattern, replacement = "\\2", x = myExistingFiles)
+  
+  if (identical(existingNumbers, character(0)))
+    existingNumbers = 0
+  
+  return(paste0(pattern,max(as.numeric(existingNumbers))+1,extension))
+}
+
+#plot and save daily spectrum from 2009-01-02 to 2019-12-31
+
+library(WaveletComp)
+library(wmtsa)
+library(TTR)
+
+n<-length(day_index)-1
+for (i in 1:n){
+  start<-day_index[i]+1
+  end<-day_index[i+1]
+  temp<-spx_ts[start:end,]
+  prices<-as.vector(temp)
+  DWTprice<-wavShrink(prices, wavelet="d4",
+                      n.level=1, 
+                      shrink.fun="soft", thresh.fun="adaptive")
+  logReturn<-rep(0,length(DWTprice)-1)
+  for (i in 1: (length(DWTprice)-1)){
+    logReturn[i]<-log(DWTprice[i+1])-log(DWTprice[i])
+  }
+  
+  RSI<-RSI(logReturn)
+  RSI<-RSI[!is.na(RSI)]
+  my.data<-data.frame(x=RSI)
+  my.w<-analyze.wavelet(my.data, "x",
+                        loess.span = 0,
+                        dt=1,dj=1/250,
+                        lowerPeriod = 2,
+                        upperPeriod = 256,
+                        make.pval = FALSE,n.sim = 10)
+  
+  #plot the wavelet power spectrum-prices
+  
+  png(filename = createNewFileName(pattern="sepctrum"))
+  wt.image(my.w, color.key = "interval",n.levels=250,
+           legend.params = list(lab="wavelet power levels",mar=4.7))
+  dev.off() 
+}
+
+# MA60
+mypath="//Users/luzhang/Desktop/MA60spectrum"
+setwd(mypath)
+
+#avoid overwriting what files already exist @RockScience
+createNewFileName = function(path  = getwd(), pattern = "plot_of_something", extension=".png") {
+  myExistingFiles = list.files(path = path, pattern = pattern)
+  print(myExistingFiles)
+  completePattern = paste0("^(",pattern,")([0-9]*)(",extension,")$")
+  existingNumbers  = gsub(pattern = completePattern, replacement = "\\2", x = myExistingFiles)
+  
+  if (identical(existingNumbers, character(0)))
+    existingNumbers = 0
+  
+  return(paste0(pattern,max(as.numeric(existingNumbers))+1,extension))
+}
+
+#plot and save daily spectrum from 2009-01-02 to 2019-12-31
+
+library(WaveletComp)
+library(wmtsa)
+library(TTR)
+
+n<-length(day_index)-1
+for (i in 1:n){
+  start<-day_index[i]+1
+  end<-day_index[i+1]
+  temp<-spx_ts[start:end,]
+  prices<-as.vector(temp)
+  DWTprice<-wavShrink(prices, wavelet="d4",
+                      n.level=1, 
+                      shrink.fun="soft", thresh.fun="adaptive")
+  logReturn<-rep(0,length(DWTprice)-1)
+  for (i in 1: (length(DWTprice)-1)){
+    logReturn[i]<-log(DWTprice[i+1])-log(DWTprice[i])
+  }
+  
+  MA60<-SMA(logReturn)
+  MA60<-MA60[!is.na(MA60)]
+  my.data<-data.frame(x=MA60)
+  my.w<-analyze.wavelet(my.data, "x",
+                        loess.span = 0,
+                        dt=1,dj=1/250,
+                        lowerPeriod = 2,
+                        upperPeriod = 256,
+                        make.pval = FALSE,n.sim = 10)
+  
+  #plot the wavelet power spectrum-prices
+  
+  png(filename = createNewFileName(pattern="sepctrum"))
+  wt.image(my.w, color.key = "interval",n.levels=250,
+           legend.params = list(lab="wavelet power levels",mar=4.7))
+  dev.off() 
+}
 
 
 
