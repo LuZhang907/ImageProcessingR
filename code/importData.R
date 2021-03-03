@@ -434,12 +434,14 @@ for (i in 1:n ){
   }
 }
 
+table(y_label)
+
 ##################################################################
 ####### creating daily 2D spectrum from 2009-2019     ############
 
 # Don't run
 
-mypath="//Users/luzhang/Desktop/spectrum"
+mypath="//Users/luzhang/Desktop/spectrum_updown"
 setwd(mypath)
 
 #avoid overwriting what files already exist @RockScience
@@ -470,8 +472,8 @@ for (i in 1:n){
                       n.level=1, 
                       shrink.fun="soft", thresh.fun="adaptive")
   logReturn<-rep(0,length(DWTprice)-1)
-  for (i in 1: (length(DWTprice)-1)){
-    logReturn[i]<-log(DWTprice[i+1])-log(DWTprice[i])
+  for (j in 1: (length(DWTprice)-1)){
+    logReturn[j]<-log(DWTprice[j+1])-log(DWTprice[j])
   }
   
   my.data<-data.frame(x=logReturn)
@@ -484,10 +486,19 @@ for (i in 1:n){
   
   #plot the wavelet power spectrum-prices
   
-  png(filename = createNewFileName(pattern="sepctrum"))
-  wt.image(my.w, color.key = "interval",n.levels=250,
-           legend.params = list(lab="wavelet power levels",mar=4.7))
-  dev.off() 
+  if(y_label[i]==0){
+    png(filename = createNewFileName(pattern="Downsepctrum"))
+    wt.image(my.w, color.key = "interval",n.levels=250,
+             legend.params = list(lab="wavelet power levels",mar=4.7))
+    dev.off()  
+  }else{
+    png(filename = createNewFileName(pattern="Upsepctrum"))
+    wt.image(my.w, color.key = "interval",n.levels=250,
+             legend.params = list(lab="wavelet power levels",mar=4.7))
+    dev.off()  
+  }
+  
+  
 }
 
 # total will be 2766 figures
@@ -886,6 +897,157 @@ for (i in 1:n){
            legend.params = list(lab="wavelet power levels",mar=4.7))
   dev.off() 
 }
+
+##################################################################
+#########################   CNN model   ##########################
+
+# Copying spectrum images to training,validation, and test directories
+Original_dataset_dir<-"//Users/luzhang/Desktop/spectrum_updown"
+
+base_dir<-"//Users/luzhang/Desktop/spectrum_test"
+dir.create(base_dir)
+
+train_dir<-file.path(base_dir,"train")
+dir.create(train_dir)
+validation_dir<-file.path(base_dir,"validation")
+dir.create(validation_dir)
+test_dir<-file.path(base_dir,"test")
+dir.create(test_dir)
+
+train_up_dir<-file.path(train_dir,"upspectrum")
+dir.create(train_up_dir)
+
+train_down_dir<-file.path(train_dir,"downspectrum")
+dir.create(train_down_dir)
+
+validation_up_dir<-file.path(validation_dir,"upspectrum")
+dir.create(validation_up_dir)
+
+validation_down_dir<-file.path(validation_dir,"downspectrum")
+dir.create(validation_down_dir)
+
+test_up_dir<-file.path(test_dir,"upspectrum")
+dir.create(test_up_dir)
+
+test_down_dir<-file.path(test_dir,"downspectrum")
+dir.create(test_down_dir)
+
+fnames<-paste0("Upsepctrum", 1:936, ".png")
+file.copy(file.path(Original_dataset_dir, fnames),
+          file.path(train_up_dir))
+
+fnames<-paste0("Upsepctrum", 937:1250, ".png")
+file.copy(file.path(Original_dataset_dir, fnames),
+          file.path(validation_up_dir))
+
+fnames<-paste0("Upsepctrum", 1251:1565, ".png")
+file.copy(file.path(Original_dataset_dir, fnames),
+          file.path(test_up_dir))
+
+fnames<-paste0("Downsepctrum", 1:720, ".png")
+file.copy(file.path(Original_dataset_dir, fnames),
+          file.path(train_down_dir))
+
+fnames<-paste0("Downsepctrum", 721:960, ".png")
+file.copy(file.path(Original_dataset_dir, fnames),
+          file.path(validation_down_dir))
+
+fnames<-paste0("Downsepctrum", 961:1201, ".png")
+file.copy(file.path(Original_dataset_dir, fnames),
+          file.path(test_down_dir))
+
+#check how many pictures are in each training split(train/validation/test)
+cat("total training upspectrum images:", length(list.files(train_up_dir)),"\n")
+cat("total training downspectrum images:", length(list.files(train_down_dir)),"\n")
+
+cat("total validation upspectrum images:", length(list.files(validation_up_dir)),"\n")
+cat("total validation downspectrum images:", length(list.files(validation_down_dir)),"\n")
+
+
+cat("total test upspectrum images:", length(list.files(test_up_dir)),"\n")
+cat("total test downspectrum images:", length(list.files(test_down_dir)),"\n")
+
+# Building networks
+rm(list = setdiff(ls(), lsf.str()))
+library(keras)
+
+model<-keras_model_sequential()%>%
+  layer_conv_2d(filters=32, kernel_size=c(3,3),activation="relu",
+                input_shape=c(150,150,3))%>%
+  layer_max_pooling_2d(pool_size=c(2,2))%>%
+  layer_conv_2d(filters=64, kernel_size=c(3,3),activation="relu",
+                input_shape=c(150,150,3))%>%
+  layer_max_pooling_2d(pool_size=c(2,2))%>%
+  layer_conv_2d(filters=128, kernel_size=c(3,3),activation="relu",
+                input_shape=c(150,150,3))%>%
+  layer_max_pooling_2d(pool_size=c(2,2))%>%
+  layer_flatten() %>%
+  layer_dense(units=512, activation="relu")%>%
+  layer_dense(units=1,activation="sigmoid")
+  
+summary(model)
+
+# Configuring the model for training
+model %>% compile(
+  loss="binary_crossentropy",
+  optimizer=optimizer_rmsprop(lr=1e-4),
+  metrics=c("acc")
+)
+
+# using image_data_generator to read images from directions
+train_datagen<-image_data_generator(rescale = 1/255)
+validation_datagen<-image_data_generator(rescale=1/255)
+test_datagen<-image_data_generator(rescale = 1/255)
+
+train_generator<-flow_images_from_directory(
+  train_dir,
+  train_datagen,
+  target_size = c(150,150),
+  batch_size = 20,
+  class_mode = "binary"
+)
+
+validation_generator<-flow_images_from_directory(
+  validation_dir,
+  validation_datagen,
+  target_size = c(150,150),
+  batch_size = 20,
+  class_mode = "binary"
+)
+
+test_generator<-flow_images_from_directory(
+  test_dir,
+  test_datagen,
+  target_size = c(150,150),
+  batch_size=20,
+  class_mode = "binary"
+)
+
+  
+batch<-generator_next(train_generator)
+str(batch)
+
+history<-model %>% fit_generator(
+  train_generator,
+  steps_per_epoch = 20,
+  epochs=20,
+  validation_data=validation_generator,
+  validation_steps = 20
+)
+
+setwd("Users/luzhang/Desktop/acc_loss")
+model %>% save_model_hdf5("acc_loss_attempt01")
+plot(history)
+
+model %>% evaluate_generator(test_generator,steps=20)
+
+
+
+
+
+
+
+
 
 
 

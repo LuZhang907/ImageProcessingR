@@ -52,14 +52,14 @@ Open<-SPX$Open
 
 #wavelet transofrm close, high, low and open
 dwt_Close<-wavShrink(Close, wavelet="d4",
-                    n.level=1, 
-                    shrink.fun="soft", thresh.fun="adaptive")
+                     n.level=1, 
+                     shrink.fun="soft", thresh.fun="adaptive")
 dwt_High<-wavShrink(High, wavelet="d4",
                     n.level=1, 
                     shrink.fun="soft", thresh.fun="adaptive")
 dwt_Low<-wavShrink(Low, wavelet="d4",
-                    n.level=1, 
-                    shrink.fun="soft", thresh.fun="adaptive")
+                   n.level=1, 
+                   shrink.fun="soft", thresh.fun="adaptive")
 dwt_Open<-wavShrink(Open, wavelet="d4",
                     n.level=1, 
                     shrink.fun="soft", thresh.fun="adaptive")
@@ -80,10 +80,11 @@ dwt_CHL<-as.matrix(cbind(dwt_Close,dwt_High,dwt_Low))
 spx_CHL<-xts(dwt_CHL, SPX$DateTime)
 spx_Close<-xts(dwt_Close,SPX$DateTime)
 
+############ prepare data for Julia #######
+HL<-write.csv(dwt_HL,)
 
 
-
-
+#using average of C, H, L, O as general prices
 prices<-dwt_Close
 prices<-xts(prices,SPX$DateTime)
 names(prices)<-"prices"
@@ -132,9 +133,6 @@ for (i in 1:n ){
 }
 
 table(y_label)
-#y_label
-#0    1 
-#1534 1913
 
 ##indicators calculation
 library(TTR)
@@ -488,9 +486,11 @@ dim(allSet); dim(trainSet); dim(testSet)
 
 if(ratio > 1) perc <- list("0"=ratio, "1"=1) else perc <- list("0"=1, "1"= (1/ratio))
 
+trainSet_balanced <- UBL::SmoteClassif(Y ~ . , dat = trainSet, C.perc = perc)
+table(trainSet_balanced$Y)
 
-#mtry <- 1
-#set.seed(1) #no avg_ultimateOscillator
+mtry <- 1
+set.seed(1) #no avg_ultimateOscillator
 #bag <- randomForestFML(Y ~ avg_ADX+avg_aroon+avg_ATR+avg_DPOClose+avg_chaikinVolatility+avg_CLV+
 #                         avg_CMOClose+avg_DPOClose+avg_DVIClose+avg_GMMAClose+avg_KSTClose
 #                       +avg_PBandsClose+avg_ROCClose+avg_momentumClose+avg_RSIClose+
@@ -513,44 +513,23 @@ varImpPlot(bag)
 # evaluating auc based on the test set
 prob_test <- predict(bag, newdata=testSet, type="prob")
 
-
-
 # confusion matrix, note the order "0" and "1"
 # here we associate TRUE with "1", note how to correctly read the confusion matrix
 table(testSet$Y, prob_test[,2] >= 0.5)
-#FALSE TRUE
-#0   468   35
-#1   331  303
+
 pred <- prediction(prob_test[,2], testSet$Y) # the 2nd column is where the label "1" is
 auc <- performance(pred, measure = "auc")@y.values[[1]]
 auc
-#[1] 0.8598159
+
 acc_perf <- performance(pred, measure = "acc")
 acc_vec <- acc_perf@y.values[[1]]
 acc <- acc_vec[max(which(acc_perf@x.values[[1]] >= 0.5))]
 acc
-#[1] 0.6781003
+
 tb_test <- table(testSet$Y)
 lucky_score <- fmlr::acc_lucky(train_class = table(trainSet$Y),
                                test_class = tb_test,
                                my_acc = acc)
 lucky_score
-#$my_accuracy
-#[1] 0.6781003
-
-#$p_random_guess
-#[1] 0
-
-#$p_educated_guess
-#[1] 0
-
-#$mean_random_guess
-#[1] 0.4998338
-
-#$mean_educated_guess
-#[1] 0.5065136
-
-#$acc_majority_guess
-#[1] 0.5576077
 
 

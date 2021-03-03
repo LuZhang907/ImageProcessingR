@@ -50,52 +50,31 @@ High<-SPX$High
 Low<-SPX$Low
 Open<-SPX$Open
 
-#wavelet transofrm close, high, low and open
-dwt_Close<-wavShrink(Close, wavelet="d4",
-                    n.level=1, 
-                    shrink.fun="soft", thresh.fun="adaptive")
-dwt_High<-wavShrink(High, wavelet="d4",
-                    n.level=1, 
-                    shrink.fun="soft", thresh.fun="adaptive")
-dwt_Low<-wavShrink(Low, wavelet="d4",
-                    n.level=1, 
-                    shrink.fun="soft", thresh.fun="adaptive")
-dwt_Open<-wavShrink(Open, wavelet="d4",
-                    n.level=1, 
-                    shrink.fun="soft", thresh.fun="adaptive")
 
 
 
 # convert Posixct to xts format
 library(highfrequency)
 library(xts)
-dwt_HL<-as.matrix(cbind(dwt_High,dwt_Low))
-spx_HL<-xts(dwt_HL,SPX$DateTime)
+HL<-as.matrix(cbind(High,Low))
+xts_HL<-xts(HL,SPX$DateTime)
 #head(spx_HL)
-dwt_HLC<-as.matrix(cbind(dwt_High,dwt_Low,dwt_Close))
-spx_HLC<-xts(dwt_HLC,SPX$DateTime)
-dwt_HLCO<-as.matrix(cbind(dwt_High,dwt_Low,dwt_Close,dwt_Open))
-spx_HLCO<-xts(dwt_HLCO,SPX$DateTime)
-dwt_CHL<-as.matrix(cbind(dwt_Close,dwt_High,dwt_Low))
-spx_CHL<-xts(dwt_CHL, SPX$DateTime)
-spx_Close<-xts(dwt_Close,SPX$DateTime)
+HLC<-as.matrix(cbind(High,Low,Close))
+xts_HLC<-xts(HLC,SPX$DateTime)
+HLCO<-as.matrix(cbind(High,Low,Close,Open))
+xts_HLCO<-xts(HLCO,SPX$DateTime)
+CHL<-as.matrix(cbind(Close,High,Low))
+xts_CHL<-xts(CHL, SPX$DateTime)
+xts_Close<-xts(Close,SPX$DateTime)
 
-
-
-
-
-prices<-dwt_Close
-prices<-xts(prices,SPX$DateTime)
-names(prices)<-"prices"
-#head(prices)
 
 ## calculating y_label based on average prices
-day_index<-endpoints(prices, on = "days", k = 1)
+day_index<-endpoints(xts_Close, on = "days", k = 1)
 #head(day_index)
 #length(day_index)
 
 # last min prices for each trading day
-lmP<-prices[day_index,]
+lmP<-xts_Close[day_index,]
 head(lmP)
 
 # average prices from 1 to 360 mins
@@ -104,7 +83,7 @@ avg_360<-rep(0,n)
 for (i in 1:n){
   start<-day_index[i]+1
   end<-day_index[i+1]-30
-  avg_360[i]<-mean(prices[start:end])
+  avg_360[i]<-mean(xts_Close[start:end])
 }
 
 #calculate the log returns
@@ -132,9 +111,10 @@ for (i in 1:n ){
 }
 
 table(y_label)
-#y_label
+
 #0    1 
-#1534 1913
+#1547 1900 
+
 
 ##indicators calculation
 library(TTR)
@@ -144,70 +124,61 @@ avg_ADX<-rep(0,n)
 for (i in 1:n){
   start<-day_index[i]+1
   end<-day_index[i+1]
-  avg_ADX[i]<-mean(ADX(dwt_HLC)[start:end])
+  avg_ADX[i]<-mean(ADX(xts_HLC)[start:end])
 }
 #aroon, done
 avg_aroon<-rep(0,n)
 for (i in 1:n){
   start<-day_index[i]+1
   end<-day_index[i+1]
-  avg_aroon[i]<-mean(aroon(dwt_HL)[start:end])
+  avg_aroon[i]<-mean(aroon(xts_HL)[start:end])
 }
+
 #ATR done
 avg_ATR<-rep(0,n)
 for (i in 1:n){
   start<-day_index[i]+1
   end<-day_index[i+1]
-  avg_ATR[i]<-mean(ATR(dwt_HLC)[start:end])
+  avg_ATR[i]<-mean(ATR(xts_HLC)[start:end])
 }
-#BBands # partial done
-avg_BBands<-rep(0,n)
-for (i in 1:n){
-  start<-day_index[i]+1
-  end<-day_index[i+1]
-  avg_BBands[i]<-mean(BBands(dwt_HLC)[start:end])
-}
-#CCI done
+
+#CCI 
 avg_CCI<-rep(0,n)
-for (i in 1:n){
+for (i in 2000:n){
   start<-day_index[i]+1
   end<-day_index[i+1]
-  avg_CCI[i]<-mean(CCI(dwt_HLC)[start:end])
+  avg_CCI[i]<-mean(CCI(xts_HLC)[start:end])
 }
-#chaikinVolatility done
+raw_features["avg_CCI"]<-avg_CCI
+write.csv(raw_features,"/Users/luzhang/Desktop/indicator/raw_features.csv")
+#chaikinVolatility 
 avg_chaikinVolatility<-rep(0,n)
 for (i in 1:n){
   start<-day_index[i]+1
   end<-day_index[i+1]
-  avg_chaikinVolatility[i]<-mean(chaikinVolatility(dwt_HLC)[start:end])
+  avg_chaikinVolatility[i]<-mean(chaikinVolatility(xts_HLC)[start:end])
 }
-#CLV done
+#CLV 
 avg_CLV<-rep(0,n)
 for (i in 1:n){
   start<-day_index[i]+1
   end<-day_index[i+1]
-  avg_CLV[i]<-mean(CLV(dwt_HLC)[start:end])
+  avg_CLV[i]<-mean(CLV(xts_HLC)[start:end])
 }
 #CMOClose done
 avg_CMOClose<-rep(0,n)
 for (i in 1:n){
   start<-day_index[i]+1
   end<-day_index[i+1]
-  avg_CMOClose[i]<-mean(CMO(spx_Close)[start:end])
+  avg_CMOClose[i]<-mean(CMO(xts_Close)[start:end])
 }
-#CTI two days only give 148 outputs,,,,
-avg_CTI<-rep(0,n)
-for (i in 1:n){
-  start<-day_index[i]+1
-  end<-day_index[i+1]
-  avg_CTI[i]<-mean(CTI(dwt_HLC)[start:end])
-}
+
 #DonchianChannel
 avg_DonchianChannel<-rep(0,n)
 for (i in 1:n){
   start<-day_index[i]+1
   end<-day_index[i+1]
-  avg_DonchianChannel[i]<-mean(DonchianChannel(dwt_HL)[start:end])
+  avg_DonchianChannel[i]<-mean(DonchianChannel(xts_HL)[start:end])
 }
 #DPOClose done
 avg_DPOClose<-rep(0,n)
@@ -488,9 +459,11 @@ dim(allSet); dim(trainSet); dim(testSet)
 
 if(ratio > 1) perc <- list("0"=ratio, "1"=1) else perc <- list("0"=1, "1"= (1/ratio))
 
+trainSet_balanced <- UBL::SmoteClassif(Y ~ . , dat = trainSet, C.perc = perc)
+table(trainSet_balanced$Y)
 
-#mtry <- 1
-#set.seed(1) #no avg_ultimateOscillator
+mtry <- 1
+set.seed(1) #no avg_ultimateOscillator
 #bag <- randomForestFML(Y ~ avg_ADX+avg_aroon+avg_ATR+avg_DPOClose+avg_chaikinVolatility+avg_CLV+
 #                         avg_CMOClose+avg_DPOClose+avg_DVIClose+avg_GMMAClose+avg_KSTClose
 #                       +avg_PBandsClose+avg_ROCClose+avg_momentumClose+avg_RSIClose+
