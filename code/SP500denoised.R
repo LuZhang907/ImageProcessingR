@@ -457,7 +457,7 @@ write.csv(avg_ZigZag, "/Users/luzhang/Desktop/indicator/attempt04.csv")
 #daily_avg_prices<-avg_390
 #length(daily_avg_prices)
 
-# random forest
+################## random forest _imbalanced dataset##############
 
 rm(list = setdiff(ls(), lsf.str()))
 library(fmlr)
@@ -473,6 +473,7 @@ dim(features)
 allSet<-data.frame(Y=as.factor(y_label),features)
 head(allSet)
 
+#write.csv(allSet,"/Users/luzhang/Desktop/indicator/allSet.csv" )
 #exclude NA at the begining of the indicators
 idx_NA <- apply(allSet,1,function(x){sum(is.na(x))>0})
 allSet <- subset(allSet, !idx_NA)
@@ -481,13 +482,27 @@ nx <- nrow(allSet)
 trainSet <- allSet[1:floor(nx*2/3),]
 testSet <- allSet[(floor(nx*2/3)+1):nx,]
 dim(allSet); dim(trainSet); dim(testSet)
+#[1] 3409   35
+#[1] 2272   35
+#[1] 1137   35
 
 #smote
 (tb <- table(trainSet$Y))
+#0    1 
+#1012 1260 
 (ratio <- tb[names(tb)=="1"] / tb[names(tb)=="0"])
+#1 
+#1.245059 
 
-if(ratio > 1) perc <- list("0"=ratio, "1"=1) else perc <- list("0"=1, "1"= (1/ratio))
+if(ratio > 1) 
+  perc <- list("0"=ratio, "1"=1) else perc <- list("0"=1, "1"= (1/ratio))
 
+#trainSet_balanced <- UBL::SmoteClassif(Y ~ . -avg_ultimateOscillator, dat = trainSet, C.perc = perc,dist = "HEMO")
+# https://www.rdocumentation.org/packages/UBL/versions/0.0.6/topics/SmoteClassif
+#trainSet_balanced <- UBL::SmoteClassif(Y ~ . -avg_ultimateOscillator, dat = trainSet, C.perc = perc)
+#Error in neighbours(tgt, dat, dist, p, k) : 
+# Can not compute Euclidean distance with nominal attributes!
+table(trainSet_balanced$Y)
 
 #mtry <- 1
 #set.seed(1) #no avg_ultimateOscillator
@@ -552,5 +567,95 @@ lucky_score
 
 #$acc_majority_guess
 #[1] 0.5576077
+
+
+##################### random forest _balanced data set   ###################
+
+
+library(fmlr)
+library(quantmod)
+library(TTR) # for various indicators
+library(randomForestFML)
+library(ROCR)
+
+features <- read.csv("/Users/luzhang/Desktop/indicator/allSet.csv", header = T)
+head(features)
+dim(features)
+
+allSet<-data.frame(features)
+head(allSet)
+
+#exclude NA at the begining of the indicators
+idx_NA <- apply(allSet,1,function(x){sum(is.na(x))>0})
+allSet <- subset(allSet, !idx_NA)
+allSet$avg_WPR<-NULL # remove the columns that cause some errors
+allSet$avg_ultimateOscillator<-NULL
+allSet$Y<-as.factor(allSet$Y)
+dim(allSet)
+table(allSet$Y)
+nx <- nrow(allSet)
+trainSet <- allSet[1:floor(nx*2/3),]
+testSet <- allSet[(floor(nx*2/3)+1):nx,]
+dim(allSet); dim(trainSet); dim(testSet)
+#[1] 3409   34
+#[1] 2272   34
+#[1] 1137   34
+
+
+table(trainSet$Y)
+#0    1 
+#1012 1260 
+
+################    under-sampling  #######################
+library(catret)
+ctrl <- trainControl(method = "repeatedcv", 
+                     number = 10, 
+                     repeats = 10, 
+                     verboseIter = FALSE,
+                     sampling = "down")
+set.seed(1)
+model_rf_under <- caret::train( Y~ .,
+                               data = trainSet,
+                               method = "rf",
+                               preProcess = c("scale", "center"),
+                               trControl = ctrl)
+final_under <- data.frame(actual = testSet$Y,
+                          predict(model_rf_under, newdata = testSet, type = "prob"))
+final_under$predict <- ifelse(final_under$X0 > 0.5, 0, 1)
+cm_under <- confusionMatrix(as.factor(final_under$predict), testSet$Y)
+
+#Confusion Matrix and Statistics
+
+#Reference
+#Prediction   0   1
+#0 376 126
+#1 127 508
+
+#Accuracy : 0.7775          
+#95% CI : (0.7522, 0.8014)
+#No Information Rate : 0.5576          
+#P-Value [Acc > NIR] : <2e-16          
+
+#Kappa : 0.5489          
+
+#Mcnemar's Test P-Value : 1               
+                                          
+#            Sensitivity : 0.7475          
+#            Specificity : 0.8013          
+#         Pos Pred Value : 0.7490          
+#         Neg Pred Value : 0.8000          
+#             Prevalence : 0.4424          
+#         Detection Rate : 0.3307          
+#   Detection Prevalence : 0.4415          
+#      Balanced Accuracy : 0.7744          
+                                          
+#       'Positive' Class : 0  
+
+
+
+
+################## Over Sampling ##################
+
+
 
 

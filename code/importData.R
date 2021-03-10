@@ -902,15 +902,13 @@ for (i in 1:n){
 #########################   CNN model   ##########################
 
 # Copying spectrum images to training,validation, and test directories
-Original_dataset_dir<-"//Users/luzhang/Desktop/spectrum_updown"
+Original_dataset_dir<-"//Users/luzhang/Desktop/indicator_spectrum_logRetrun/CMO"
 
-base_dir<-"//Users/luzhang/Desktop/spectrum_test"
+base_dir<-"//Users/luzhang/Desktop/spectrum_CMO"
 dir.create(base_dir)
 
 train_dir<-file.path(base_dir,"train")
 dir.create(train_dir)
-validation_dir<-file.path(base_dir,"validation")
-dir.create(validation_dir)
 test_dir<-file.path(base_dir,"test")
 dir.create(test_dir)
 
@@ -920,11 +918,6 @@ dir.create(train_up_dir)
 train_down_dir<-file.path(train_dir,"downspectrum")
 dir.create(train_down_dir)
 
-validation_up_dir<-file.path(validation_dir,"upspectrum")
-dir.create(validation_up_dir)
-
-validation_down_dir<-file.path(validation_dir,"downspectrum")
-dir.create(validation_down_dir)
 
 test_up_dir<-file.path(test_dir,"upspectrum")
 dir.create(test_up_dir)
@@ -932,27 +925,19 @@ dir.create(test_up_dir)
 test_down_dir<-file.path(test_dir,"downspectrum")
 dir.create(test_down_dir)
 
-fnames<-paste0("Upsepctrum", 1:936, ".png")
+fnames<-paste0("Upsepctrum", 1:1000, ".png")
 file.copy(file.path(Original_dataset_dir, fnames),
           file.path(train_up_dir))
 
-fnames<-paste0("Upsepctrum", 937:1250, ".png")
-file.copy(file.path(Original_dataset_dir, fnames),
-          file.path(validation_up_dir))
-
-fnames<-paste0("Upsepctrum", 1251:1565, ".png")
+fnames<-paste0("Upsepctrum", 1001:1534, ".png")
 file.copy(file.path(Original_dataset_dir, fnames),
           file.path(test_up_dir))
 
-fnames<-paste0("Downsepctrum", 1:720, ".png")
+fnames<-paste0("Downsepctrum", 1:1000, ".png")
 file.copy(file.path(Original_dataset_dir, fnames),
           file.path(train_down_dir))
 
-fnames<-paste0("Downsepctrum", 721:960, ".png")
-file.copy(file.path(Original_dataset_dir, fnames),
-          file.path(validation_down_dir))
-
-fnames<-paste0("Downsepctrum", 961:1201, ".png")
+fnames<-paste0("Downsepctrum", 1001:1534, ".png")
 file.copy(file.path(Original_dataset_dir, fnames),
           file.path(test_down_dir))
 
