@@ -1,0 +1,89 @@
+import pandas as pd
+import numpy as np
+from skimage.io import imread
+from sklearn.model_selection import train_test_split
+from matplotlib import pyplot as plt
+%matplotlib inline
+
+import keras
+from keras import optimizers
+from keras.utils import to_categorical
+from keras.layers import Input, Dense, Flatten, Dropout, Conv2D, MaxPooling2D, GlobalAveragePooling2D, Activation, concatenate
+from keras.layers.advanced_activations import LeakyReLU
+from keras.layers.normalization import BatchNormalization
+from keras.models import Model
+from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau
+
+train_df_down = pd.read_csv('/Users/luzhang/Desktop/indicator/y_label_down.csv', index_col=0)
+train_df_up = pd.read_csv('/Users/luzhang/Desktop/indicator/y_label_up.csv', index_col=0)
+
+
+train_df_down['CMO_file'] = train_df_down.index.map(lambda id: f'/Users/luzhang/Desktop/balanced_features/CMO/downspectrum/Downspectrum{id}.png')
+train_df_up['CMO_file'] = train_df_up.index.map(lambda id: f'/Users/luzhang/Desktop/balanced_features/CMO/upspectrum/Upspectrum{id}.png')
+
+train_df_down['aroon_file'] = train_df_down.index.map(lambda id: f'/Users/luzhang/Desktop/balanced_features/aroon/downspectrum/Downspectrum{id}.png')
+train_df_up['aroon_file'] = train_df_up.index.map(lambda id: f'/Users/luzhang/Desktop/balanced_features/aroon/upspectrum/Upspectrum{id}.png')
+
+frames=[train_df_down, train_df_up]
+train_df=pd.concat(frames)
+
+def read_spectograms(file_paths, img_rows, img_cols, as_gray, channels):
+  """
+  Reads the spectogram files from disk and normalizes the pixel values
+    @params:
+      file_paths - Array of file paths to read from
+      img_rows - The image height.
+      img_cols - The image width.
+      as_grey - Read the image as Greyscale or RGB.
+      channels - Number of channels.
+    @returns:
+      The created and compiled model (Model)        
+  """
+  images = []
+  
+  for file_path in file_paths:
+    images.append(imread(file_path, as_gray = as_gray))
+  
+  images = np.asarray(images, dtype=np.float32)
+  
+  # normalize
+  images = images / np.max(images)
+  
+  # reshape to match Keras expectaions
+  images = images.reshape(images.shape[0], img_rows, img_cols, channels)
+
+  return images
+  
+as_gray = True
+in_channel = 4
+
+if as_gray:
+  in_channel = 1
+
+img_rows, img_cols = 128, 118
+num_classes = 2 # number of appliances
+
+batch_size = 32
+epochs = 100
+input_shape = (img_rows, img_cols, in_channel)
+input_img = Input(shape = input_shape)
+
+x_train_CMO = read_spectograms(train_df.CMO_file.values, img_rows, img_cols, as_gray, in_channel)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
