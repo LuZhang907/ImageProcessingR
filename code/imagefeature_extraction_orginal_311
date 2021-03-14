@@ -1,0 +1,305 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Wed Mar 10 09:18:30 2021
+
+@author: luzhang
+"""
+
+import numpy as np 
+import matplotlib.pyplot as plt
+import glob
+import cv2
+import os
+import seaborn as sns
+import pandas as pd
+from skimage.filters import roberts, sobel, scharr, prewitt 
+from scipy import ndimage as nd 
+ 
+
+print(os.listdir("/Users/luzhang/Desktop/sp500/"))
+
+#Resize images to 64
+SIZE = 64
+
+#Capture images and labels into arrays.
+#Start by creating empty lists.
+
+#sp500
+train_images_sp500 = []
+train_labels_sp500 = [] 
+for directory_path in glob.glob("/Users/luzhang/Desktop/sp500/train/*"):
+    label = directory_path.split("/")[-1]
+    #print(label)
+    for img_path in glob.glob(os.path.join(directory_path, "*.png")):
+        #print(img_path)
+        img = cv2.imread(img_path, cv2.IMREAD_COLOR) #Reading color images
+        img = cv2.resize(img, (SIZE, SIZE)) #Resize images
+        #img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR) #Optional step. Change BGR to RGB
+        train_images_sp500.append(img)
+        train_labels_sp500.append(label)
+
+train_images_sp500 = np.array(train_images_sp500)
+train_labels_sp500 = np.array(train_labels_sp500)
+
+#aroon
+train_images_aroon = []
+for directory_path in glob.glob("/Users/luzhang/Desktop/train_test_indicators/aroon/train/*"):
+    for img_path in glob.glob(os.path.join(directory_path, "*.png")):
+        #print(img_path)
+        img = cv2.imread(img_path, cv2.IMREAD_COLOR) #Reading color images
+        img = cv2.resize(img, (SIZE, SIZE)) #Resize images
+        #img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR) #Optional step. Change BGR to RGB
+        train_images_aroon.append(img)
+
+train_images_aroon = np.array(train_images_aroon)
+
+#CMO
+train_images_CMO = []
+for directory_path in glob.glob("/Users/luzhang/Desktop/train_test_indicators/CMO/train/*"):
+    for img_path in glob.glob(os.path.join(directory_path, "*.png")):
+        #print(img_path)
+        img = cv2.imread(img_path, cv2.IMREAD_COLOR) #Reading color images
+        img = cv2.resize(img, (SIZE, SIZE)) #Resize images
+        #img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR) #Optional step. Change BGR to RGB
+        train_images_CMO.append(img)
+
+train_images_CMO = np.array(train_images_CMO)
+
+#DPO
+train_images_DPO = []
+for directory_path in glob.glob("/Users/luzhang/Desktop/train_test_indicators/DPO/train/*"):
+    for img_path in glob.glob(os.path.join(directory_path, "*.png")):
+        #print(img_path)
+        img = cv2.imread(img_path, cv2.IMREAD_COLOR) #Reading color images
+        img = cv2.resize(img, (SIZE, SIZE)) #Resize images
+        #img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR) #Optional step. Change BGR to RGB
+        train_images_DPO.append(img)
+
+train_images_DPO = np.array(train_images_DPO)
+
+#RSI
+train_images_RSI = []
+for directory_path in glob.glob("/Users/luzhang/Desktop/train_test_indicators/RSI/train/*"):
+    for img_path in glob.glob(os.path.join(directory_path, "*.png")):
+        #print(img_path)
+        img = cv2.imread(img_path, cv2.IMREAD_COLOR) #Reading color images
+        img = cv2.resize(img, (SIZE, SIZE)) #Resize images
+        #img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR) #Optional step. Change BGR to RGB
+        train_images_RSI.append(img)
+
+train_images_RSI = np.array(train_images_RSI)
+
+#WPR
+train_images_WPR = []
+for directory_path in glob.glob("/Users/luzhang/Desktop/train_test_indicators/WPR/train/*"):
+    for img_path in glob.glob(os.path.join(directory_path, "*.png")):
+        #print(img_path)
+        img = cv2.imread(img_path, cv2.IMREAD_COLOR) #Reading color images
+        img = cv2.resize(img, (SIZE, SIZE)) #Resize images
+        #img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR) #Optional step. Change BGR to RGB
+        train_images_WPR.append(img)
+
+train_images_WPR = np.array(train_images_WPR)
+
+
+
+#Do exactly the same for test/validation images
+# test
+
+#sp500
+test_images_sp500 = []
+test_labels_sp500 = [] 
+for directory_path in glob.glob("/Users/luzhang/Desktop/sp500/test/*"):
+    fruit_label = directory_path.split("/")[-1]
+    for img_path in glob.glob(os.path.join(directory_path, "*.png")):
+        img = cv2.imread(img_path, cv2.IMREAD_COLOR)
+        img = cv2.resize(img, (SIZE, SIZE))
+        #img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR) #Optional
+        test_images_sp500.append(img)
+        test_labels_sp500.append(fruit_label)
+        
+test_images_sp500 = np.array(test_images_sp500)
+test_labels_sp500 = np.array(test_labels_sp500)
+
+#aroon
+test_images_aroon = []
+for directory_path in glob.glob("/Users/luzhang/Desktop/train_test_indicators/aroon/test/*"):
+    for img_path in glob.glob(os.path.join(directory_path, "*.png")):
+        img = cv2.imread(img_path, cv2.IMREAD_COLOR)
+        img = cv2.resize(img, (SIZE, SIZE))
+        #img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR) #Optional
+        test_images_aroon.append(img)
+        
+test_images_aroon = np.array(test_images_aroon)
+
+#CMO
+test_images_CMO = []
+for directory_path in glob.glob("/Users/luzhang/Desktop/train_test_indicators/CMO/test/*"):
+    for img_path in glob.glob(os.path.join(directory_path, "*.png")):
+        img = cv2.imread(img_path, cv2.IMREAD_COLOR)
+        img = cv2.resize(img, (SIZE, SIZE))
+        #img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR) #Optional
+        test_images_CMO.append(img)
+        
+test_images_CMO = np.array(test_images_CMO)
+
+#DPO
+test_images_DPO = []
+for directory_path in glob.glob("/Users/luzhang/Desktop/train_test_indicators/DPO/test/*"):
+    for img_path in glob.glob(os.path.join(directory_path, "*.png")):
+        img = cv2.imread(img_path, cv2.IMREAD_COLOR)
+        img = cv2.resize(img, (SIZE, SIZE))
+        #img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR) #Optional
+        test_images_DPO.append(img)
+        
+test_images_DPO = np.array(test_images_DPO)
+
+#RSI
+test_images_RSI = []
+for directory_path in glob.glob("/Users/luzhang/Desktop/train_test_indicators/RSI/test/*"):
+    for img_path in glob.glob(os.path.join(directory_path, "*.png")):
+        img = cv2.imread(img_path, cv2.IMREAD_COLOR)
+        img = cv2.resize(img, (SIZE, SIZE))
+        #img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR) #Optional
+        test_images_RSI.append(img)
+        
+test_images_RSI = np.array(test_images_RSI)
+
+#WPR
+test_images_WPR = []
+for directory_path in glob.glob("/Users/luzhang/Desktop/train_test_indicators/WPR/test/*"):
+    for img_path in glob.glob(os.path.join(directory_path, "*.png")):
+        img = cv2.imread(img_path, cv2.IMREAD_COLOR)
+        img = cv2.resize(img, (SIZE, SIZE))
+        #img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR) #Optional
+        test_images_WPR.append(img)
+        
+test_images_WPR = np.array(test_images_WPR)
+
+
+#Encode labels from text (folder names) to integers.
+from sklearn import preprocessing
+le = preprocessing.LabelEncoder()
+le.fit(test_labels_sp500)
+test_labels_encoded = le.transform(test_labels_sp500)
+le.fit(train_labels_sp500)
+train_labels_encoded = le.transform(train_labels_sp500)
+
+#Split data into test and train datasets (already split but assigning to meaningful convention)
+#If you only have one dataset then split here
+x_train, y_train, x_test, y_test = train_images_sp500, train_labels_encoded, test_images_sp500, test_labels_encoded
+
+# Normalize pixel values to between 0 and 1
+x_train, x_test = x_train / 255.0, x_test / 255.0
+train_images_aroon, test_images_aroon =train_images_aroon/255.0,  train_images_aroon/255.0
+train_images_CMO, test_images_CMO =train_images_CMO/255.0,  train_images_CMO/255.0
+train_images_DPO, test_images_DPO =train_images_DPO/255.0,  train_images_DPO/255.0
+train_images_RSI, test_images_RSI =train_images_RSI/255.0,  train_images_RSI/255.0
+train_images_WPR, test_images_WPR =train_images_WPR/255.0,  train_images_WPR/255.0
+
+
+
+
+
+###################################################################
+# FEATURE EXTRACTOR function
+# input shape is (n, x, y, c) - number of images, x, y, and channels
+def feature_extractor(dataset,aroon, CMO, DPO, RSI, WPR):
+    x_train = dataset
+    aroon=aroon
+    CMO=CMO
+    DPO=DPO
+    RSI=RSI
+    WPR=WPR
+    
+    image_dataset = pd.DataFrame()
+    for image in range(x_train.shape[0]):  #iterate through each file 
+        #print(image)
+        
+        df = pd.DataFrame()  #Temporary data frame to capture information for each loop.
+        #Reset dataframe to blank after each loop.
+        
+        input_img = x_train[image, :,:,:]
+        img = input_img
+    ################################################################
+    #START ADDING DATA TO THE DATAFRAME
+    #Add feature extractors, e.g. edge detection, smoothing, etc. 
+            
+        # FEATURE 1 - Pixel values
+         
+        #Add pixel values to the data frame
+        pixel_values = img.reshape(-1)
+        df['Pixel_Value'] = pixel_values   #Pixel value itself as a feature
+        #df['Image_Name'] = image   #Capture image name as we read multiple images
+        
+        # FEATURE 2 - aroon
+        aroon_img=aroon[image, :,:,:]
+        aroon_value=aroon_img.reshape(-1)
+        df['aroon']=aroon_value
+        
+        # FEATURE 3 - CMO
+        CMO_img=CMO[image, :,:,:]
+        CMO_value=CMO_img.reshape(-1)
+        df['CMO']=CMO_value
+        
+        # FEATURE 4 - RSI
+        RSI_img=RSI[image, :,:,:]
+        RSI_value=RSI_img.reshape(-1)
+        df['RSI']=RSI_value
+        
+        # FEATURE 5 - WPR
+        WPR_img=WPR[image, :,:,:]
+        WPR_value=WPR_img.reshape(-1)
+        df['WPR']=WPR_value
+       
+        #Add more filters as needed
+        
+        #Append features from current image to the dataset
+        image_dataset = image_dataset.append(df)
+        
+    return image_dataset
+####################################################################
+#Extract features from training images
+image_features = feature_extractor(x_train, train_images_aroon, train_images_CMO, train_images_DPO, train_images_RSI, train_images_WPR)
+
+#Reshape to a vector for Random Forest / SVM training
+n_features = image_features.shape[1]
+image_features = np.expand_dims(image_features, axis=0)
+X_for_RF = np.reshape(image_features, (x_train.shape[0], -1))  #Reshape to #images, features
+
+#Define the classifier
+from sklearn.ensemble import RandomForestClassifier
+RF_model = RandomForestClassifier(n_estimators = 50, random_state = 42)
+
+#Can also use SVM but RF is faster and may be more accurate.
+#from sklearn import svm
+#SVM_model = svm.SVC(decision_function_shape='ovo')  #For multiclass classification
+#SVM_model.fit(X_for_RF, y_train)
+
+# Fit the model on training data
+RF_model.fit(X_for_RF, y_train) #For sklearn no one hot encoding
+
+#Predict on Test data
+#Extract features from test data and reshape, just like training data
+test_features = feature_extractor(x_test, test_images_aroon, test_images_CMO, test_images_DPO, test_images_RSI, test_images_WPR)
+test_features = np.expand_dims(test_features, axis=0)
+test_for_RF = np.reshape(test_features, (x_test.shape[0], -1))
+
+#Predict on test
+test_prediction = RF_model.predict(test_for_RF)
+#Inverse le transform to get original label back. 
+test_prediction = le.inverse_transform(test_prediction)
+
+#Print overall accuracy
+from sklearn import metrics
+print ("Accuracy = ", metrics.accuracy_score(test_labels_sp500, test_prediction))
+
+#Print confusion matrix
+from sklearn.metrics import confusion_matrix
+cm = confusion_matrix(test_labels_sp500, test_prediction)
+
+fig, ax = plt.subplots(figsize=(6,6))         # Sample figsize in inches
+sns.set(font_scale=1.6)
+sns.heatmap(cm, annot=True, ax=ax)
+
