@@ -568,10 +568,7 @@ lucky_score
 #$acc_majority_guess
 #[1] 0.5576077
 
-
-##################### random forest _balanced data set   ###################
-
-
+###################### random forest imbalance vs balance dataset ##########
 library(fmlr)
 library(quantmod)
 library(TTR) # for various indicators
@@ -605,6 +602,49 @@ dim(allSet); dim(trainSet); dim(testSet)
 table(trainSet$Y)
 #0    1 
 #1012 1260 
+###### original imbalanced data set
+set.seed(1)
+model_rf <- caret::train(Y ~ .,
+                         data = trainSet,
+                         method = "rf",
+                         preProcess = c("scale", "center"),
+                         trControl = trainControl(method = "repeatedcv", 
+                                                  number = 10, 
+                                                  repeats = 10, 
+                                                  verboseIter = FALSE))
+final <- data.frame(actual = testSet$Y,
+                    predict(model_rf, newdata = testSet, type = "prob"))
+final$predict <- ifelse(final$X0 > 0.5, 0, 1)
+cm_original <- confusionMatrix(as.factor(final$predict), testSet$Y)
+#Confusion Matrix and Statistics
+
+#Reference
+#Prediction   0   1
+#0 348  90
+#1 155 544
+
+#Accuracy : 0.7845          
+#95% CI : (0.7595, 0.8081)
+#No Information Rate : 0.5576          
+#P-Value [Acc > NIR] : < 2.2e-16       
+
+#Kappa : 0.5573          
+
+#Mcnemar's Test P-Value : 4.336e-05       
+                                          
+#            Sensitivity : 0.6918          
+#            Specificity : 0.8580          
+#         Pos Pred Value : 0.7945          
+#         Neg Pred Value : 0.7783          
+#             Prevalence : 0.4424          
+#         Detection Rate : 0.3061          
+#   Detection Prevalence : 0.3852          
+#     Balanced Accuracy : 0.7749          
+                                          
+#       'Positive' Class : 0               
+       
+
+#################   random forest _balanced data set   #####
 
 ################    under-sampling  #######################
 library(catret)
@@ -628,34 +668,202 @@ cm_under <- confusionMatrix(as.factor(final_under$predict), testSet$Y)
 
 #Reference
 #Prediction   0   1
-#0 376 126
-#1 127 508
+#0 349 103
+#1 154 531
 
-#Accuracy : 0.7775          
-#95% CI : (0.7522, 0.8014)
-#No Information Rate : 0.5576          
-#P-Value [Acc > NIR] : <2e-16          
+#Accuracy : 0.774          
+#95% CI : (0.7485, 0.798)
+#No Information Rate : 0.5576         
+#P-Value [Acc > NIR] : < 2.2e-16      
 
-#Kappa : 0.5489          
+#Kappa : 0.537          
 
-#Mcnemar's Test P-Value : 1               
-                                          
-#            Sensitivity : 0.7475          
-#            Specificity : 0.8013          
-#         Pos Pred Value : 0.7490          
-#         Neg Pred Value : 0.8000          
-#             Prevalence : 0.4424          
-#         Detection Rate : 0.3307          
-#   Detection Prevalence : 0.4415          
-#      Balanced Accuracy : 0.7744          
-                                          
-#       'Positive' Class : 0  
-
+#Mcnemar's Test P-Value : 0.001815       
+                                         
+#            Sensitivity : 0.6938         
+#            Specificity : 0.8375         
+#         Pos Pred Value : 0.7721         
+#        Neg Pred Value : 0.7752         
+#            Prevalence : 0.4424         
+#        Detection Rate : 0.3069         
+#   Detection Prevalence : 0.3975         
+#      Balanced Accuracy : 0.7657         
+                                         
+#      'Positive' Class : 0    
 
 
 
 ################## Over Sampling ##################
 
+ctrl <- trainControl(method = "repeatedcv", 
+                     number = 10, 
+                     repeats = 10, 
+                     verboseIter = FALSE,
+                     sampling = "up")
+set.seed(1)
+model_rf_over <- caret::train( Y~ .,
+                                data = trainSet,
+                                method = "rf",
+                                preProcess = c("scale", "center"),
+                                trControl = ctrl)
+final_over <- data.frame(actual = testSet$Y,
+                          predict(model_rf_over, newdata = testSet, type = "prob"))
+final_over$predict <- ifelse(final_over$X0 > 0.5, 0, 1)
+cm_over <- confusionMatrix(as.factor(final_over$predict), testSet$Y)
+
+#Confusion Matrix and Statistics
+
+#Reference
+#Prediction   0   1
+#0 314  75
+#1 189 559
+
+#Accuracy : 0.7678          
+#95% CI : (0.7422, 0.7921)
+#No Information Rate : 0.5576          
+#P-Value [Acc > NIR] : < 2.2e-16       
+
+#Kappa : 0.5181          
+
+#Mcnemar's Test P-Value : 3.534e-12       
+                                          
+#            Sensitivity : 0.6243          
+#            Specificity : 0.8817          
+#         Pos Pred Value : 0.8072          
+#         Neg Pred Value : 0.7473          
+#             Prevalence : 0.4424          
+#         Detection Rate : 0.2762          
+#  Detection Prevalence : 0.3421          
+#      Balanced Accuracy : 0.7530          
+                                          
+#       'Positive' Class : 0               
+              
+################## Rose ##################
+
+ctrl <- trainControl(method = "repeatedcv", 
+                     number = 10, 
+                     repeats = 10, 
+                     verboseIter = FALSE,
+                     sampling = "rose")
+set.seed(1)
+model_rf_rose <- caret::train( Y~ .,
+                                data = trainSet,
+                                method = "rf",
+                                preProcess = c("scale", "center"),
+                                trControl = ctrl)
+final_rose <- data.frame(actual = testSet$Y,
+                          predict(model_rf_rose, newdata = testSet, type = "prob"))
+final_rose$predict <- ifelse(final_rose$X0 > 0.5, 0, 1)
+cm_rose <- confusionMatrix(as.factor(final_rose$predict), testSet$Y)
+
+#Confusion Matrix and Statistics
+
+#Reference
+#Prediction   0   1
+#0 317  81
+#1 186 553
+
+#Accuracy : 0.7652          
+#95% CI : (0.7394, 0.7895)
+#No Information Rate : 0.5576          
+#P-Value [Acc > NIR] : < 2.2e-16       
+
+#Kappa : 0.5135          
+
+#Mcnemar's Test P-Value : 1.957e-10       
+                                          
+#            Sensitivity : 0.6302          
+#            Specificity : 0.8722          
+#         Pos Pred Value : 0.7965          
+#        Neg Pred Value : 0.7483          
+#             Prevalence : 0.4424          
+#         Detection Rate : 0.2788          
+#   Detection Prevalence : 0.3500          
+#      Balanced Accuracy : 0.7512          
+                                          
+#       'Positive' Class : 0               
+                              
+
+################## smote ##################
+
+ctrl <- trainControl(method = "repeatedcv", 
+                     number = 10, 
+                     repeats = 10, 
+                     verboseIter = FALSE,
+                     sampling = "smote")
+set.seed(1)
+model_rf_smote <- caret::train( Y~ .,
+                                data = trainSet,
+                                method = "rf",
+                                preProcess = c("scale", "center"),
+                                trControl = ctrl)
+final_smote <- data.frame(actual = testSet$Y,
+                          predict(model_rf_smote, newdata = testSet, type = "prob"))
+final_smote$predict <- ifelse(final_smote$X0 > 0.5, 0, 1)
+cm_smote <- confusionMatrix(as.factor(final_smote$predict), testSet$Y)
+
+#Confusion Matrix and Statistics
+
+#Reference
+#Prediction   0   1
+#0 452 249
+#1  51 385
+
+#Accuracy : 0.7361          
+#95% CI : (0.7095, 0.7616)
+#No Information Rate : 0.5576          
+#P-Value [Acc > NIR] : < 2.2e-16       
+
+#Kappa : 0.4861          
+
+#Mcnemar's Test P-Value : < 2.2e-16       
+                                          
+#            Sensitivity : 0.8986          
+#           Specificity : 0.6073          
+#         Pos Pred Value : 0.6448          
+#        Neg Pred Value : 0.8830          
+#             Prevalence : 0.4424          
+#         Detection Rate : 0.3975          
+#   Detection Prevalence : 0.6165          
+#      Balanced Accuracy : 0.7529          
+                                          
+#       'Positive' Class : 0  
+########### compare predictions ########
+models <- list(original = model_rf,
+               under = model_rf_under,
+               over = model_rf_over,
+               smote = model_rf_smote,
+               rose = model_rf_rose)
+resampling <- resamples(models)
+bwplot(resampling)
+
+library(dplyr)
+comparison <- data.frame(model = names(models),
+                         Sensitivity = rep(NA, length(models)),
+                         Specificity = rep(NA, length(models)),
+                         Precision = rep(NA, length(models)),
+                         Recall = rep(NA, length(models)),
+                         F1 = rep(NA, length(models)))
 
 
+for (name in names(models)) {
+  model <- get(paste0("cm_", name))
+  class<-model$byClass
+  comparison[comparison$model == name, ] <- filter(comparison, model == name) %>%
+    mutate(Sensitivity =class["Sensitivity"],
+           Specificity = class["Specificity"],
+           Precision = class["Precision"],
+           Recall = class["Recall"],
+           F1 = class["F1"])
+}
+
+
+
+# write.csv(comparison, "/Users/luzhang/Desktop/indicator/comparsion.csv")
+
+library(tidyr)
+comparison %>%
+  gather(x, y, Sensitivity:F1) %>%
+  ggplot(aes(x = x, y = y, color = model)) +
+  geom_jitter(width = 0.2, alpha = 0.5, size = 3)
 
