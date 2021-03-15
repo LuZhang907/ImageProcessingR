@@ -216,7 +216,6 @@ for (i in 1:n){
   end<-day_index[i+1]
   avg_DPOClose[i]<-mean(DPO(spx_Close)[start:end])
 }
-write.csv(avg_DPOClose, "/Users/luzhang/Desktop/indicator/attempt03.csv")
 
 #DVI done
 avg_DVIClose<-rep(0,n)
@@ -249,7 +248,6 @@ for (i in 1:n){
   end<-day_index[i+1]
   avg_lags[i]<-mean(lags(dwt_HLC)[start:end])
 }
-write.csv(avg_lags, "/Users/luzhang/Desktop/indicator/attempt04.csv")
 
 #MACD done
 avg_MACD<-rep(0,n)
@@ -258,7 +256,7 @@ for (i in 1:n){
   end<-day_index[i+1]
   avg_MACD[i]<-mean(MACD(dwt_Close)[start:end])
 }
-write.csv(avg_MACD, "/Users/luzhang/Desktop/indicator/attempt04.csv")
+
 #PBands done
 avg_PBandsClose<-rep(0,n)
 for (i in 1:n){
@@ -266,7 +264,6 @@ for (i in 1:n){
   end<-day_index[i+1]
   avg_PBandsClose[i]<-mean(PBands(spx_Close)[start:end])
 }
-#write.csv(avg_PBandsClose, "/Users/luzhang/Desktop/indicator/attempt04.csv")
 
 #ROCclose done
 avg_ROCClose<-rep(0,n)
@@ -275,7 +272,7 @@ for (i in 1:n){
   end<-day_index[i+1]
   avg_ROCClose[i]<-mean(ROC(spx_Close)[start:end])
 }
-#write.csv(avg_ROCClose, "/Users/luzhang/Desktop/indicator/attempt04.csv")
+
 #momentum done
 avg_momentumClose<-rep(0,n)
 for (i in 1:n){
@@ -283,7 +280,7 @@ for (i in 1:n){
   end<-day_index[i+1]
   avg_momentumClose[i]<-mean(momentum(spx_Close)[start:end])
 }
-#write.csv(avg_momentumClose, "/Users/luzhang/Desktop/indicator/attempt04.csv")
+
 #RSI done
 avg_RSIClose<-rep(0,n)
 for (i in 1:n){
@@ -291,7 +288,7 @@ for (i in 1:n){
   end<-day_index[i+1]
   avg_RSIClose[i]<-mean(RSI(spx_Close)[start:end])
 }
-#write.csv(avg_RSIClose, "/Users/luzhang/Desktop/indicator/attempt04.csv")
+
 #runSum done
 avg_runSum<-rep(0,n)
 for (i in 1:n){
@@ -299,7 +296,7 @@ for (i in 1:n){
   end<-day_index[i+1]
   avg_runSum[i]<-mean(runSum(spx_Close)[start:end])
 }
-#write.csv(avg_runSum, "/Users/luzhang/Desktop/indicator/attempt04.csv")
+
 #runMin  done
 avg_runMin<-rep(0,n)
 for (i in 1:n){
@@ -307,7 +304,7 @@ for (i in 1:n){
   end<-day_index[i+1]
   avg_runMin[i]<-mean(runMin(spx_Close)[start:end])
 }
-write.csv(avg_runMin, "/Users/luzhang/Desktop/indicator/attempt04.csv")
+
 #runMax done
 avg_runMax<-rep(0,n)
 for (i in 1:n){
@@ -315,7 +312,7 @@ for (i in 1:n){
   end<-day_index[i+1]
   avg_runMax[i]<-mean(runMax(spx_Close)[start:end])
 }
-write.csv(avg_runMax, "/Users/luzhang/Desktop/indicator/attempt04.csv")
+
 #runMedian done
 avg_runMedian<-rep(0,n)
 for (i in 1:n){
@@ -323,7 +320,7 @@ for (i in 1:n){
   end<-day_index[i+1]
   avg_runMedian[i]<-mean(runMedian(spx_Close)[start:end])
 }
-write.csv(avg_runMedian, "/Users/luzhang/Desktop/indicator/attempt04.csv")
+
 #SAR done
 avg_SAR<-rep(0,n)
 for (i in 1:n){
@@ -331,7 +328,7 @@ for (i in 1:n){
   end<-day_index[i+1]
   avg_SAR[i]<-mean(SAR(dwt_HL)[start:end])
 }
-write.csv(avg_SAR, "/Users/luzhang/Desktop/indicator/attempt04.csv")
+
 #SMA done
 avg_SMAClose<-rep(0,n)
 for (i in 1:n){
@@ -339,7 +336,6 @@ for (i in 1:n){
   end<-day_index[i+1]
   avg_SMAClose[i]<-mean(SMA(spx_Close)[start:end])
 }
-write.csv(avg_SMAClose, "/Users/luzhang/Desktop/indicator/attempt04.csv")
 
 #EMA done
 avg_EMAClose<-rep(0,n)
@@ -348,7 +344,7 @@ for (i in 1:n){
   end<-day_index[i+1]
   avg_EMAClose[i]<-mean(EMA(spx_Close)[start:end])
 }
-write.csv(avg_EMAClose, "/Users/luzhang/Desktop/indicator/attempt04.csv")
+
 #DEMA done
 avg_DEMAClose<-rep(0,n)
 for (i in 1:n){
@@ -356,7 +352,6 @@ for (i in 1:n){
   end<-day_index[i+1]
   avg_DEMAClose[i]<-mean(DEMA(spx_Close)[start:end])
 }
-write.csv(avg_DEMAClose, "/Users/luzhang/Desktop/indicator/attempt04.csv")
 
 #SNR done
 avg_SNR<-rep(0,n)
@@ -365,7 +360,7 @@ for (i in 1:n){
   end<-day_index[i+1]
   avg_SNR[i]<-mean(SNR(dwt_HLC, n=30)[start:end])
 }
-write.csv(avg_SNR, "/Users/luzhang/Desktop/indicator/attempt04.csv")
+
 #stoch error non-leading NAs
 avg_stoch<-rep(0,n)
 for (i in 1:n){
@@ -380,7 +375,7 @@ for (i in 1:n){
   end<-day_index[i+1]
   avg_SMI[i]<-mean(SMI(dwt_HLC)[start:end])
 }
-write.csv(avg_SMI, "/Users/luzhang/Desktop/indicator/attempt04.csv")
+
 #TDI done
 avg_TDI<-rep(0,n)
 for (i in 1:n){
@@ -388,7 +383,7 @@ for (i in 1:n){
   end<-day_index[i+1]
   avg_TDI[i]<-mean(TDI(spx_Close)[start:end])
 }
-write.csv(avg_TDI, "/Users/luzhang/Desktop/indicator/attempt04.csv")
+
 #TRIX done
 avg_TRIX<-rep(0,n)
 for (i in 1:n){
@@ -396,7 +391,7 @@ for (i in 1:n){
   end<-day_index[i+1]
   avg_TRIX[i]<-mean(TRIX(spx_Close)[start:end])
 }
-write.csv(avg_TRIX, "/Users/luzhang/Desktop/indicator/attempt04.csv")
+
 #ultimateOscillator done
 avg_ultimateOscillator<-rep(0,n)
 for (i in 1:n){
@@ -404,7 +399,7 @@ for (i in 1:n){
   end<-day_index[i+1]
   avg_ultimateOscillator[i]<-mean(ultimateOscillator(dwt_HLC)[start:end])
 }
-write.csv(avg_ultimateOscillator, "/Users/luzhang/Desktop/indicator/attempt04.csv")
+
 #VHF done
 avg_VHF<-rep(0,n)
 for (i in 1:n){
@@ -412,7 +407,6 @@ for (i in 1:n){
   end<-day_index[i+1]
   avg_VHF[i]<-mean(VHF(spx_Close)[start:end])
 }
-write.csv(avg_VHF, "/Users/luzhang/Desktop/indicator/attempt04.csv")
 
 #Volatility done
 avg_volatility<-rep(0,n)
@@ -421,7 +415,7 @@ for (i in 1:n){
   end<-day_index[i+1]
   avg_volatility[i]<-mean(volatility(dwt_HLCO)[start:end])
 }
-write.csv(avg_volatility, "/Users/luzhang/Desktop/indicator/attempt04.csv")
+
 #williamsAD done
 avg_williamsAD<-rep(0,n)
 for (i in 1:n){
@@ -429,7 +423,7 @@ for (i in 1:n){
   end<-day_index[i+1]
   avg_williamsAD[i]<-mean(williamsAD(dwt_HLC)[start:end])
 }
-write.csv(avg_williamsAD, "/Users/luzhang/Desktop/indicator/attempt04.csv")
+
 #WPR done
 avg_WPR<-rep(0,n)
 for (i in 1:n){
@@ -444,7 +438,7 @@ for (i in 1:n){
   end<-day_index[i+1]
   avg_ZigZag[i]<-mean(ZigZag(dwt_HL)[start:end])
 }
-write.csv(avg_ZigZag, "/Users/luzhang/Desktop/indicator/attempt04.csv")
+
 # daily average prices 
 #n<-length(day_index)-1
 #avg_390<-rep(0,n)
@@ -569,11 +563,13 @@ lucky_score
 #[1] 0.5576077
 
 ###################### random forest imbalance vs balance dataset ##########
+rm(list = setdiff(ls(), lsf.str()))
 library(fmlr)
 library(quantmod)
 library(TTR) # for various indicators
 library(randomForestFML)
 library(ROCR)
+library(caret)
 
 features <- read.csv("/Users/luzhang/Desktop/indicator/allSet.csv", header = T)
 head(features)
